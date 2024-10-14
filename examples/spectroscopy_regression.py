@@ -1,7 +1,7 @@
 # Code to run the near infra-red spectroscopy regression example
 
 import torch
-from src.mogplvm import MOGPLVM
+from src.mogplvm import WSGPLVM
 import argparse
 from pathlib import Path
 from itertools import chain
@@ -36,10 +36,8 @@ def main(args):
     path = work_dir / "examples/data/flodat_splits"
 
     training_spectra = torch.Tensor(np.loadtxt(fname=path / f'training_spectra_{data_idx}.txt'))
-    training_temp_tensor = torch.Tensor(np.loadtxt(fname=path / f'training_temp_{data_idx}.txt')).type(torch.int)
     training_components = torch.Tensor(np.loadtxt(fname=path / f'training_components_{data_idx}.txt'))
     test_spectra = torch.Tensor(np.loadtxt(fname=path / f'test_spectra_{data_idx}.txt'))
-    test_temp_tensor = torch.Tensor(np.loadtxt(fname=path / f'test_temp_{data_idx}.txt')).type(torch.int)
     test_components = torch.Tensor(np.loadtxt(fname=path / f'test_components_{data_idx}.txt'))
 
     wavelengths = torch.Tensor(np.loadtxt(fname=path / f'wl_{seed}.txt')).reshape(-1,1)
@@ -81,7 +79,7 @@ def main(args):
         v_l=None
         
 
-    bass = MOGPLVM(
+    bass = WSGPLVM(
         beta = beta, 
         gamma=gamma, 
         sigma2 = torch.ones(1)*1,
@@ -146,25 +144,25 @@ def main(args):
         experiment_name = f'spectroscopy_regression_no_wl'
 
     save_results_csv(file_name= f'{experiment_name}.csv', 
-                    path=work_dir / "results" / "MOGPLVM" / "csvs" / f'{experiment_name}.csv', 
+                    path=work_dir / "results" / "WSGPLVM" / "csvs" / f'{experiment_name}.csv', 
                     results_dict=results_dict)
 
     file_appendix = f'data_{data_idx}_seed_{seed}.pt'
 
-    save_parameters(path=work_dir / "results" / "MOGPLVM" / "parameters" / experiment_name, 
+    save_parameters(path=work_dir / "results" / "WSGPLVM" / "parameters" / experiment_name, 
                     file_appendix=file_appendix, 
                     model=bass, 
                     training_dataset=training_dataset, 
                     test_dataset=test_dataset)
 
-    save_elbos(path=work_dir / "results" / "MOGPLVM" / "full_elbos"  / experiment_name,
+    save_elbos(path=work_dir / "results" / "WSGPLVM" / "full_elbos"  / experiment_name,
                 file_appendix=file_appendix, 
                 elbos=loss)
 
     loss = - bass.elbo([training_dataset, test_dataset])  
     loss.backward()  
 
-    save_grads(path=work_dir / "results" / "MOGPLVM" / "gradients"  / experiment_name,
+    save_grads(path=work_dir / "results" / "WSGPLVM" / "gradients"  / experiment_name,
             file_appendix=file_appendix, 
             model_dict={name: param.grad for name, param in bass.named_parameters()}, 
             training_dataset_dict={name: param.grad for name, param in training_dataset.named_parameters()}, 

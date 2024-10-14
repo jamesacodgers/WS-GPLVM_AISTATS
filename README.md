@@ -18,11 +18,11 @@ Before running into the code, please ensure you have the proper environment set 
 
 ## Usage
 
-Once you've set up your environment, you're ready to start using MO-GPLVM:
+Once you've set up your environment, you're ready to start using WS-GPLVM:
 
 - **Running Examples**: Explore how to use the model by running the example scripts located in the `examples` folder.
 - **Comparison Methods**: If you're interested in benchmarking or comparing performance, the necessary code is available in the `comparison_methods` folder.
 
 ## Results 
 
-You can find the output of each individual run in the `results` folder.
+You can find the output of our experiments in the `results` folder. The scripts in `results/analysis` can be used to generate the plots and tables found in the paper.

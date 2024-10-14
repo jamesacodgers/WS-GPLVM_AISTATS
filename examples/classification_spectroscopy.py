@@ -4,7 +4,7 @@
 from itertools import chain
 import pandas as pd
 import torch
-from src.mogplvm import MOGPLVM
+from src.mogplvm import WSGPLVM
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -47,7 +47,7 @@ def main(args):
     else:
         experiment_name = f'spectroscopy_classification_inducing_{num_latent_inducing}'
 
-    path = work_dir / "results" / "MOGPLVM" / "csvs" / f'{experiment_name}.csv'
+    path = work_dir / "results" / "WSGPLVM" / "csvs" / f'{experiment_name}.csv'
     
     # Check if run already in results file
     df = pd.read_csv(path)
@@ -91,7 +91,7 @@ def main(args):
         training_dataset = Dataset(training_spectral_data, training_components_object, x_init_train, torch.ones_like(x_init_train).to(device)).to(device)
         test_dataset = Dataset(test_spectral_data, test_components, torch.zeros_like(x_init_test).to(device), torch.ones(test_spectral_data.num_data_points, num_latent_dims).to(device)).to(device)
 
-        # MOGPLVM model initialization
+        # WSGPLVM model initialization
         beta = torch.rand(x_init_train.shape[1]).to(device) + 0.1 # latent lengthscale
         sigma2_s = (torch.rand(1).to(device) + 1) / 2 # kernel variance
         v_x = torch.randn(num_latent_inducing, num_latent_dims).to(device) # inducing points for the latent variables
@@ -106,7 +106,7 @@ def main(args):
 
         print(f"inits: beta {beta}, sigma2_s {sigma2_s}, v_x {v_x}")
 
-        bass = MOGPLVM(
+        bass = WSGPLVM(
             beta=beta,
             gamma=gamma,
             sigma2=torch.ones(1).to(device),
@@ -169,25 +169,25 @@ def main(args):
         }
 
         save_results_csv(file_name=f'{experiment_name}.csv', 
-                        path=work_dir / "results" / "MOGPLVM" / "csvs" / f'{experiment_name}.csv', 
+                        path=work_dir / "results" / "WSGPLVM" / "csvs" / f'{experiment_name}.csv', 
                         results_dict=results_dict)
 
         file_appendix = f'fold_{fold_number}_seed_{seed}.pt'
 
-        save_parameters(path=work_dir / "results" / "MOGPLVM" / "parameters" / f"{experiment_name}", 
+        save_parameters(path=work_dir / "results" / "WSGPLVM" / "parameters" / f"{experiment_name}", 
                         file_appendix=file_appendix, 
                         model=bass, 
                         training_dataset=training_dataset, 
                         test_dataset=test_dataset)
 
-        save_elbos(path=work_dir / "results" / "MOGPLVM" / "full_elbos" / f"{experiment_name}", 
+        save_elbos(path=work_dir / "results" / "WSGPLVM" / "full_elbos" / f"{experiment_name}", 
                     file_appendix=file_appendix, 
                     elbos=loss)
 
         loss = - bass.elbo([training_dataset, test_dataset])  
         loss.backward()  
 
-        save_grads(path=work_dir / "results" / "MOGPLVM" / "gradients" /  f"{experiment_name}",
+        save_grads(path=work_dir / "results" / "WSGPLVM" / "gradients" /  f"{experiment_name}",
                 file_appendix=file_appendix, 
                 model_dict={name: param.grad for name, param in bass.named_parameters()}, 
                 training_dataset_dict={name: param.grad for name, param in training_dataset.named_parameters()}, 

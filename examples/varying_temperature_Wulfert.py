@@ -5,7 +5,7 @@ import copy
 import numpy as np
 from scipy.io import loadmat
 import torch
-from src.mogplvm import MOGPLVM
+from src.mogplvm import WSGPLVM
 import matplotlib.pyplot as plt
 from itertools import chain
 from sklearn.model_selection import train_test_split
@@ -105,7 +105,7 @@ test_data = Dataset(
                 ))
 
 
-bass = MOGPLVM(
+bass = WSGPLVM(
     beta = torch.ones(x_init_train.shape[1])*5, 
     gamma=torch.ones(1)*1000, 
     sigma2 = torch.ones(1)*1e-0, 

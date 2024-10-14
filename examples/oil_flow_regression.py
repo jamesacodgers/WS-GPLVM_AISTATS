@@ -1,7 +1,7 @@
 # Code required to make predictions of mixture fractions in oil
 
 import torch
-from src.mogplvm import MOGPLVM
+from src.mogplvm import WSGPLVM
 import argparse
 from pathlib import Path
 from itertools import chain
@@ -45,7 +45,7 @@ def main(args):
     else:
         experiment_name = f'oil_flow_regression_train_{num_train}_test_{num_test}_{num_latent_inducing}inducing'
 
-    path = work_dir / "results" / "MOGPLVM" / "csvs" / f'{experiment_name}.csv'
+    path = work_dir / "results" / "WSGPLVM" / "csvs" / f'{experiment_name}.csv'
     
     # Check if run already in results file
     df = pd.read_csv(path)
@@ -105,7 +105,7 @@ def main(args):
         v_x = torch.randn(num_latent_inducing, num_latent_dims).to(device) # inducing points
 
         # Create mdoel and move to GPU. Note not input dependence so no input lengthscale or inducing points
-        bass = MOGPLVM(
+        bass = WSGPLVM(
             beta = beta, 
             sigma2 = torch.ones(1).to(device),
             sigma2_s = sigma2_s,
@@ -157,25 +157,25 @@ def main(args):
                         'log_prob': np.sum(prob)}
 
         save_results_csv(file_name= f'{experiment_name}.csv', 
-                        path=work_dir / "results" / "MOGPLVM" / "csvs" / experiment_name / f'{experiment_name}.csv', 
+                        path=work_dir / "results" / "WSGPLVM" / "csvs" / experiment_name / f'{experiment_name}.csv', 
                         results_dict=results_dict)
 
         file_appendix = f'data_{data_idx}_seed_{seed}.pt'
 
-        save_parameters(path=work_dir / "results" / "MOGPLVM" / "parameters" / experiment_name, 
+        save_parameters(path=work_dir / "results" / "WSGPLVM" / "parameters" / experiment_name, 
                         file_appendix=file_appendix, 
                         model=bass, 
                         training_dataset=training_dataset, 
                         test_dataset=test_dataset)
 
-        save_elbos(path=work_dir / "results" / "MOGPLVM" / "full_elbos"  / experiment_name,
+        save_elbos(path=work_dir / "results" / "WSGPLVM" / "full_elbos"  / experiment_name,
                     file_appendix=file_appendix, 
                     elbos=loss)
 
         loss = - bass.elbo([training_dataset, test_dataset])  
         loss.backward()  
 
-        save_grads(path=work_dir / "results" / "MOGPLVM" / "gradients"  / experiment_name,
+        save_grads(path=work_dir / "results" / "WSGPLVM" / "gradients"  / experiment_name,
                 file_appendix=file_appendix, 
                 model_dict={name: param.grad for name, param in bass.named_parameters()}, 
                 training_dataset_dict={name: param.grad for name, param in training_dataset.named_parameters()}, 
