@@ -1,24 +1,13 @@
 # Code required to make predictions of mixture fractions in oil
 
-import copy 
-from itertools import chain
-import pandas as pd
-from scipy.io import arff
 import matplotlib.pyplot as plt
 import torch
-from src.mogplvm import MOGPLVM
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from sklearn.preprocessing import OneHotEncoder
 import gpytorch
-from sklearn.decomposition import PCA
 
 
-from src.data import Dataset, IndependentObservations, ObservedComponents, SpectralData, VariationalClassifier, VariationalDirichletDistribution, get_init_values_for_latent_variables, predict_components_from_static_spectra
-from src.utils.plot_utils import SpectraPlot
-from src.utils.tensor_utils import log_linspace
-from src.utils.train_utils import lbfgs_training_loop, train_bass_on_spectral_data
 import argparse
 from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, save_grads
 
@@ -184,18 +173,18 @@ def main(args):
 
 
     save_results_csv(file_name= f'{experiment_name}.csv', 
-                    path=work_dir / "results" / "GP" / "csvs" / f'{experiment_name}.csv', 
+                    path=work_dir / "results" / "ILMC" / "csvs" / f'{experiment_name}.csv', 
                     results_dict=results_dict)
 
     file_appendix = f'data_{data_idx}_seed_{seed}.pt'
 
-    save_parameters(path=work_dir / "results" / "GP" / "parameters" / experiment_name, 
+    save_parameters(path=work_dir / "results" / "ILMC" / "parameters" / experiment_name, 
                     file_appendix=file_appendix, 
                     model=model, 
                     training_dataset=None, 
                     test_dataset=None)
 
-    save_elbos(path=work_dir / "results" / "GP" / "full_elbos"  / experiment_name,
+    save_elbos(path=work_dir / "results" / "ILMC" / "full_elbos"  / experiment_name,
                 file_appendix=file_appendix, 
                 elbos=loss)
 
@@ -203,7 +192,7 @@ def main(args):
     ml = -mll(output, train_y)
     ml.backward()  
 
-    save_grads(path=work_dir / "results" / "GP" / "gradients"  / experiment_name,
+    save_grads(path=work_dir / "results" / "ILMC" / "gradients"  / experiment_name,
             file_appendix=file_appendix, 
             model_dict={name: param.grad for name, param in model.named_parameters()}, 
             training_dataset_dict=None,

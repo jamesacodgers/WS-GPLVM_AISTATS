@@ -9,14 +9,11 @@ import argparse
 from pathlib import Path
 from itertools import chain
 from src.data import Dataset, IndependentObservations, ObservedComponents,  VariationalDirichletDistribution, get_init_values_for_latent_variables
-from src.utils.tensor_utils import log_linspace
-from src.utils.train_utils import lbfgs_training_loop, train_bass_on_spectral_data
-from sklearn.cross_decomposition import PLSRegression
+from src.utils.train_utils import lbfgs_training_loop
 from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, save_grads
 
 
 import numpy as np
-import pandas as pd
 
 torch.set_default_dtype(torch.float64)
 
@@ -32,6 +29,8 @@ def main(args):
     torch.manual_seed(seed)
     np.random.seed(seed)
 
+
+    # Load data
     training_spectra = torch.Tensor(np.loadtxt(fname=work_dir / f'examples/data/3phData_splits/DataTrn_{data_idx}.txt'))
     training_labels = torch.Tensor(np.loadtxt(fname=work_dir / f'examples/data/3phData_splits/DataTrnLbls_{data_idx}.txt')).type(torch.int)
     training_components = torch.Tensor(np.loadtxt(fname=work_dir / f'examples/data/3phData_splits/DataTrnFrctns_{data_idx}.txt'))
@@ -77,20 +76,13 @@ def main(args):
                     Sigma_x = 1*torch.ones(test_spectral_data.num_data_points, num_latent_dims
                     ))
 
-
-    num_latent_inducing = 16
-
+    # Create the model
     cls = CLS(
         M=12,
         C=3
     )
 
     loss = []
-
-    adam_training = torch.optim.Adam(chain(cls.parameters(), training_dataset.parameters()), lr = 5e-3)
-    adam_all = torch.optim.Adam(chain(cls.parameters(), training_dataset.parameters(), test_dataset.parameters()), lr = 1e-3)
-
-
     
     loss.extend(lbfgs_training_loop(cls, [training_dataset, test_dataset], chain(training_dataset.parameters(), test_dataset.parameters(), cls.parameters()) , 2))
     while  torch.absolute(loss[-1] - loss[-2]) > 1:
@@ -108,23 +100,24 @@ def main(args):
         with torch.no_grad():
             plt.scatter(training_dataset.mu_x[:,args[0]], training_dataset.mu_x[:,args[1]], c = training_labels.argmax(dim=1))
             plt.scatter(test_dataset.mu_x[:,args[0]], test_dataset.mu_x[:,args[1]], c = training_labels.argmax(dim=1), marker="x")
-            # plt.scatter(bass.v_x[:,args[0]], bass.v_x[:,args[1]], c = "black", marker="*")
-            # plt.savefig(f"examples/figs/oil_flow/mixture_latent_space.pdf", bbox_inches = "tight")
+
             theta = torch.arange(0, 2*torch.pi, 0.01)
             d = torch.sqrt(5**2/((torch.cos(theta)**2) + (torch.sin(theta)**2)) )
-            # plt.plot(d*np.cos(theta), d*np.sin(theta))
+
 
     prob = []
     for data, alpha in zip(test_components, test_dataset.components_distribution.alpha):
-        # dist = torch.distributions.Dirichlet(torch.ones(3))
         dist = torch.distributions.Dirichlet(alpha)
         prob.append(dist.log_prob(dist.mean).detach().numpy())
-        # prob.append(dist.log_prob(data).detach().numpy())
 
+
+    # Print results
     print("log_prob", np.sum(prob))
     print("msep: ", torch.mean((test_dataset.get_r() - test_components)**2).item())
     print("msep from mode: ", torch.mean((test_dataset.get_r_mode() - test_components)**2).item())
     print("elbo: ", loss[-1])
+
+    # Save results
 
     results_dict = {'seed': seed, 
     'data_idx': data_idx,
@@ -216,7 +209,7 @@ if __name__ == "__main__":
         "--work_dir",
         "-wd",
 	type=str,
-        default="/Users/jo816/github/Submission",
+        default="",
         help="working directory",
     )
 

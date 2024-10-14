@@ -1,11 +1,8 @@
 # Code required for the classification hyperspecral example in the paper
 
 # %%
-import copy 
 from itertools import chain
 import pandas as pd
-from scipy.io import arff
-import matplotlib.pyplot as plt
 from src.utils.save_utils import save_elbos, save_grads, save_parameters, save_results_csv
 import torch
 from src.cls import CLS
@@ -13,10 +10,8 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from src.data import Dataset, IndependentObservations, ObservedComponents, SpectralData, VariationalClassifier, VariationalDirichletDistribution, get_init_values_for_latent_variables, predict_components_from_static_spectra
-from src.utils.plot_utils import SpectraPlot
-from src.utils.tensor_utils import log_linspace
-from src.utils.train_utils import lbfgs_training_loop, train_bass_on_spectral_data
+from src.data import Dataset, IndependentObservations, ObservedComponents, SpectralData, VariationalClassifier, get_init_values_for_latent_variables
+from src.utils.train_utils import lbfgs_training_loop
 import argparse
 
 torch.set_default_dtype(torch.float64)

@@ -1,23 +1,13 @@
 # Script for running the MOGP regression on the spectroscopy regression task
 
 import torch
-from src.mogplvm import MOGPLVM
-import matplotlib.pyplot as plt
 import argparse
 from pathlib import Path
-from itertools import chain
-import copy
 import numpy as np
-from scipy.io import loadmat
-import pandas as pd
 import gpytorch
 from sklearn.decomposition import PCA
-from sklearn.model_selection import KFold
 
-from src.data import Dataset, IndependentObservations,  SpectralData, ObservedComponents,  VariationalDirichletDistribution, get_init_values_for_latent_variables
-from src.utils.tensor_utils import log_linspace
-from src.utils.train_utils import lbfgs_training_loop, train_bass_on_spectral_data
-from sklearn.cross_decomposition import PLSRegression
+from src.data import SpectralData, ObservedComponents,  VariationalDirichletDistribution
 from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, save_grads
 
 
@@ -161,18 +151,18 @@ def main(args):
     experiment_name = f'spectroscopy_regression_xvalid_ndims'
 
     save_results_csv(file_name= f'{experiment_name}.csv', 
-                    path=work_dir / "results" / "GP" / "csvs" / f'{experiment_name}.csv', 
+                    path=work_dir / "results" / "ILMC" / "csvs" / f'{experiment_name}.csv', 
                     results_dict=results_dict)
 
     file_appendix = f'data_{data_idx}_seed_{seed}.pt'
 
-    save_parameters(path=work_dir / "results" / "GP" / "parameters" / experiment_name, 
+    save_parameters(path=work_dir / "results" / "ILMC" / "parameters" / experiment_name, 
                     file_appendix=file_appendix, 
                     model=model, 
                     training_dataset=None, 
                     test_dataset=None)
 
-    save_elbos(path=work_dir / "results" / "GP" / "full_elbos"  / experiment_name,
+    save_elbos(path=work_dir / "results" / "ILMC" / "full_elbos"  / experiment_name,
                 file_appendix=file_appendix, 
                 elbos=loss_list)
 
@@ -180,7 +170,7 @@ def main(args):
     ml = -mll(output, train_y)
     ml.backward()  
 
-    save_grads(path=work_dir / "results" / "GP" / "gradients"  / experiment_name,
+    save_grads(path=work_dir / "results" / "ILMC" / "gradients"  / experiment_name,
             file_appendix=file_appendix, 
             model_dict={name: param.grad for name, param in model.named_parameters()}, 
             training_dataset_dict=None,
@@ -191,7 +181,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--random_seed",

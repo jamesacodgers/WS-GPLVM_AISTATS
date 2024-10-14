@@ -2,14 +2,12 @@
 
 import torch
 from src.mogplvm import MOGPLVM
-import matplotlib.pyplot as plt
 import argparse
 from pathlib import Path
 from itertools import chain
 from src.data import Dataset, IndependentObservations, ObservedComponents,  VariationalDirichletDistribution, get_init_values_for_latent_variables
 from src.utils.tensor_utils import log_linspace
 from src.utils.train_utils import lbfgs_training_loop, train_bass_on_spectral_data
-from sklearn.cross_decomposition import PLSRegression
 from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, save_grads
 import time
 

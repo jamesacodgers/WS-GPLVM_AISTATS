@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import argparse
 from pathlib import Path
 import numpy as np
-from scipy.io import loadmat
 from sklearn.model_selection import KFold
 from sklearn.cross_decomposition import PLSRegression
 from src.utils.save_utils import save_results_csv

@@ -7,19 +7,14 @@ from scipy.io import loadmat
 import torch
 from src.mogplvm import MOGPLVM
 import matplotlib.pyplot as plt
-import pickle
-from itertools import chain, product
+from itertools import chain
 from sklearn.model_selection import train_test_split
 
-from src.data import Dataset, IndependentObservations, ObservedComponents, SpectralData, VariationalDirichletDistribution, get_init_values_for_latent_variables
-from src.utils.plot_utils import SpectraPlot
+from src.data import Dataset, ObservedComponents, SpectralData, VariationalDirichletDistribution, get_init_values_for_latent_variables
 from src.utils.tensor_utils import log_linspace 
 from src.utils.train_utils import train_bass_on_spectral_data, lbfgs_training_loop
 from src.utils.prob_utils import dirichlet_cov, dirichlet_mean
-from src.utils.plot_utils import save_vec
 from src.utils.plot_utils import project_vect_to_dirichlet, project_covar_to_dirichlet
-from scipy.stats import gaussian_kde
-from matplotlib.colors import Normalize
 
 from sklearn.cross_decomposition import PLSRegression
 
@@ -235,7 +230,6 @@ with torch.no_grad():
 
 
 # %%
-import matplotlib.lines as mlines
 args = bass.beta.argsort()
 with torch.no_grad():
     fig, ax = plt.subplots(figsize=(8,6))
