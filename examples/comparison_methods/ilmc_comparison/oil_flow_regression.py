@@ -2,11 +2,10 @@
 
 import matplotlib.pyplot as plt
 import torch
-import pandas as pd
 import numpy as np
 from pathlib import Path
 import gpytorch
-
+import os
 
 import argparse
 from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, save_grads

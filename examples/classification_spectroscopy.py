@@ -4,7 +4,7 @@
 from itertools import chain
 import pandas as pd
 import torch
-from src.mogplvm import WSGPLVM
+from wsgplvm import WSGPLVM
 import pandas as pd
 import numpy as np
 from pathlib import Path

@@ -1,7 +1,5 @@
 #%%
 
-import numpy as np
-import torch
 import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -39,7 +37,7 @@ ilmc_best_restarts
 # %%
 
 for metric in ['msep', 'log_prob']:
-    print(f"GP aggregated results. {metric} mean: {ilmc_best_restarts[metric].mean()}, std: {ilmc_best_restarts[metric].std()}")
+    print(f"ILMC aggregated results. {metric} mean: {ilmc_best_restarts[metric].mean()}, std: {ilmc_best_restarts[metric].std()}")
 
 #%%
 

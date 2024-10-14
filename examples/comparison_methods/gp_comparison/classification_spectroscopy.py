@@ -13,7 +13,7 @@ from sklearn.decomposition import PCA
 from src.data import SpectralData
 import argparse
 from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, save_grads
-import os
+
 
 torch.set_default_dtype(torch.float64)
 
@@ -170,22 +170,22 @@ def main(args):
     experiment_name = "spectroscopy_classification_with_saved_logprob"
 
     save_results_csv(file_name=f'{experiment_name}.csv', 
-                    path=work_dir / "results" / "ILMC" / "csvs" / f'{experiment_name}.csv', 
+                    path=work_dir / "results" / "GP" / "csvs" / f'{experiment_name}.csv', 
                     results_dict=results_dict)
 
     file_appendix = f'fold_{fold_number}_seed_{seed}.pt'
 
     file_name = f'test_log_probs'
-    os.makedirs(work_dir /"results" / "ILMC" / "parameters" / f"{experiment_name}" , exist_ok = True)
-    torch.save(test_preds, work_dir / "results" / "ILMC" / "parameters" / f"{experiment_name}" / f'{file_name}_{file_appendix}')
+    os.makedirs(work_dir /"results" / "GP" / "parameters" / f"{experiment_name}" , exist_ok = True)
+    torch.save(test_preds, work_dir / "results" / "GP" / "parameters" / f"{experiment_name}" / f'{file_name}_{file_appendix}')
 
-    save_parameters(path=work_dir / "results" / "ILMC" / "parameters" / f"{experiment_name}", 
+    save_parameters(path=work_dir / "results" / "GP" / "parameters" / f"{experiment_name}", 
                     file_appendix=file_appendix, 
                     model=model, 
                     training_dataset=None, 
                     test_dataset=None)
     
-    save_elbos(path=work_dir / "results" / "ILMC" / "full_elbos" / f"{experiment_name}", 
+    save_elbos(path=work_dir / "results" / "GP" / "full_elbos" / f"{experiment_name}", 
                 file_appendix=file_appendix, 
                 elbos=loss)
 
@@ -193,7 +193,7 @@ def main(args):
     loss = -mll(output, y_train)
     loss.backward()  
 
-    save_grads(path=work_dir / "results" / "ILMC" / "gradients" / f"{experiment_name}",
+    save_grads(path=work_dir / "results" / "GP" / "gradients" / f"{experiment_name}",
             file_appendix=file_appendix, 
             model_dict={name: param.grad for name, param in model.named_parameters()}, 
             training_dataset_dict=None, 
@@ -203,7 +203,8 @@ def main(args):
     print({name: param.grad for name, param in model.named_parameters()})
 
 if __name__ == "__main__":
-
+    # Log in to your W&B account
+    import os
 
     argparser = argparse.ArgumentParser()
     argparser.add_argument(

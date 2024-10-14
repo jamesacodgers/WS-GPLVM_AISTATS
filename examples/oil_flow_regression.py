@@ -1,7 +1,7 @@
 # Code required to make predictions of mixture fractions in oil
 
 import torch
-from src.mogplvm import WSGPLVM
+from wsgplvm import WSGPLVM
 import argparse
 from pathlib import Path
 from itertools import chain
@@ -10,7 +10,6 @@ from src.utils.tensor_utils import log_linspace
 from src.utils.train_utils import lbfgs_training_loop, train_bass_on_spectral_data
 from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, save_grads
 import time
-
 
 import numpy as np
 import pandas as pd

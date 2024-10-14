@@ -1,7 +1,7 @@
 # Code to run the near infra-red spectroscopy regression example
 
 import torch
-from src.mogplvm import WSGPLVM
+from wsgplvm import WSGPLVM
 import argparse
 from pathlib import Path
 from itertools import chain

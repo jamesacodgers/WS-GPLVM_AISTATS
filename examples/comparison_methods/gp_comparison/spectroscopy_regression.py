@@ -1,4 +1,5 @@
-# Script for running the MOGP regression on the spectroscopy regression task
+
+# %%
 
 import torch
 import argparse
@@ -6,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import gpytorch
 from sklearn.decomposition import PCA
+
 from src.data import SpectralData, ObservedComponents,  VariationalDirichletDistribution
 from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, save_grads
 
@@ -13,8 +15,7 @@ from src.utils.save_utils import save_results_csv, save_parameters, save_elbos, 
 torch.set_default_dtype(torch.float64)
 
 class MultitaskGPModel(gpytorch.models.ApproximateGP):
-    """class for the multitask GP model"""
-    def __init__(self, inducing_points, num_latents, num_tasks, ard_dims):
+    def __init__(self, inducing_points, num_latents, num_tasks):
         # Let's use a different set of inducing points for each latent function
         inducing_points = inducing_points
 
@@ -41,7 +42,7 @@ class MultitaskGPModel(gpytorch.models.ApproximateGP):
         # so we learn a different set of hyperparameters
         self.mean_module = gpytorch.means.ConstantMean(batch_shape=torch.Size([num_latents]))
         self.covar_module = gpytorch.kernels.ScaleKernel(
-            gpytorch.kernels.RBFKernel(ard_num_dims=ard_dims, batch_shape=torch.Size([num_latents])),
+            gpytorch.kernels.RBFKernel(batch_shape=torch.Size([num_latents])),
             batch_shape=torch.Size([num_latents])
         )
 
@@ -57,7 +58,6 @@ def main(args):
     seed = args.random_seed
     data_idx = args.data_idx
     work_dir = Path(args.work_dir)
-    num_pca_dims = args.num_pca_dims
 
     print(f"random restart {seed} data index {data_idx}")
     torch.manual_seed(seed)
@@ -65,12 +65,13 @@ def main(args):
 
     path = work_dir / "examples/data/flodat_splits"
 
-    test_type = ""
+    test_type = "_75percenttest"
 
-    # Load data
     training_spectra = torch.Tensor(np.loadtxt(fname=path / f'training_spectra{test_type}_{data_idx}.txt'))
+    training_temp_tensor = torch.Tensor(np.loadtxt(fname=path / f'training_temp{test_type}_{data_idx}.txt')).type(torch.int)
     training_components = torch.Tensor(np.loadtxt(fname=path / f'training_components{test_type}_{data_idx}.txt'))
     test_spectra = torch.Tensor(np.loadtxt(fname=path / f'test_spectra{test_type}_{data_idx}.txt'))
+    test_temp_tensor = torch.Tensor(np.loadtxt(fname=path / f'test_temp{test_type}_{data_idx}.txt')).type(torch.int)
     test_components = torch.Tensor(np.loadtxt(fname=path / f'test_components{test_type}_{data_idx}.txt'))
 
     wavelengths = torch.Tensor(np.loadtxt(fname=path / f'wl_{seed}.txt')).reshape(-1,1)
@@ -80,11 +81,27 @@ def main(args):
 
     test_spectral_data = SpectralData(wavelengths, test_spectra)
     test_components_data = VariationalDirichletDistribution(torch.ones(test_spectral_data.num_data_points, 3))
+    
+    cov_matrix = (torch.matmul(training_spectral_data.spectra.T, training_spectral_data.spectra)  / (training_spectral_data.num_data_points - 1))
 
-    num_latents = 2 # number of latent dimensions
-    num_tasks = 3 # number of tasks
+    # Perform Singular Value Decomposition
+    U, S, V = torch.svd(cov_matrix)
 
-    # Perform PCA
+    # Calculate cumulative variance
+    total_variance = torch.sum(S)
+    cumulative_variance = torch.cumsum(S, 0)/total_variance
+
+    # Find the number of components to reach 99% of variance
+    num_pca_dims = 1 
+    while (cumulative_variance[num_pca_dims-1] < 1 - 1e-4): 
+        num_pca_dims += 1 
+
+    print("num_components ", num_pca_dims)
+
+    # training_spectra, S, V = torch.pca_lowrank(training_spectral_data.spectra, num_pca_dims)
+
+    # test_spectra = torch.matmul(test_spectral_data.spectra, V)
+
     pca = PCA(n_components=num_pca_dims)
     pca.fit(training_spectral_data.spectra)
     training_spectra = pca.transform(training_spectral_data.spectra)
@@ -94,15 +111,17 @@ def main(args):
     test_x = torch.tensor(pca.transform(test_spectra))
     test_y = test_components
 
-    # Fit model with 50 inducing points
-    model = MultitaskGPModel(torch.rand(num_latents, 50, num_pca_dims), num_latents, num_tasks,num_pca_dims)
+    num_latents = 2
+    num_tasks = 3
+
+    model = MultitaskGPModel(torch.rand(num_latents, 50, num_pca_dims), num_latents, num_tasks)
     likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=num_tasks)
 
     output = model(train_x)
     print(output.__class__.__name__, output.event_shape)
 
-    # Train
     num_epochs = 2000
+
     model.train()
     likelihood.train()
 
@@ -111,8 +130,11 @@ def main(args):
         {'params': likelihood.parameters()},
     ], lr=1e-2)
 
+    # # Our loss object. We're using the VariationalELBO, which essentially just computes the ELBO
     mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=train_y.size(0))
 
+    # We use more CG iterations here because the preconditioner introduced in the NeurIPS paper seems to be less
+    # effective for VI.
     epochs_iter = range(num_epochs)
     loss_list = []
     for i in epochs_iter:
@@ -129,7 +151,6 @@ def main(args):
     model.eval()
     likelihood.eval()
 
-    # Make predictions
     with torch.no_grad(), gpytorch.settings.fast_pred_var():
         predictions = likelihood(model(test_x))
         mean = predictions.mean
@@ -140,28 +161,27 @@ def main(args):
     print("loss: ", loss_list[-1])
     print("num_components ", num_pca_dims)
 
-    # Save results
     results_dict = {'seed': seed, 
     'data_idx': data_idx,
     'mll': loss_list[-1],
     'msep': torch.mean((mean - test_y)**2).item(),
     'log_prob': predictions.log_prob(test_y).item()}
 
-    experiment_name = f'spectroscopy_regression_xvalid_ndims'
+    experiment_name = f'spectroscopy_regression{test_type}'
 
     save_results_csv(file_name= f'{experiment_name}.csv', 
-                    path=work_dir / "results" / "ILMC" / "csvs" / f'{experiment_name}.csv', 
+                    path=work_dir / "results" / "GP" / "csvs" / f'{experiment_name}.csv', 
                     results_dict=results_dict)
 
     file_appendix = f'data_{data_idx}_seed_{seed}.pt'
 
-    save_parameters(path=work_dir / "results" / "ILMC" / "parameters" / experiment_name, 
+    save_parameters(path=work_dir / "results" / "GP" / "parameters" / experiment_name, 
                     file_appendix=file_appendix, 
                     model=model, 
                     training_dataset=None, 
                     test_dataset=None)
 
-    save_elbos(path=work_dir / "results" / "ILMC" / "full_elbos"  / experiment_name,
+    save_elbos(path=work_dir / "results" / "GP" / "full_elbos"  / experiment_name,
                 file_appendix=file_appendix, 
                 elbos=loss_list)
 
@@ -169,7 +189,7 @@ def main(args):
     ml = -mll(output, train_y)
     ml.backward()  
 
-    save_grads(path=work_dir / "results" / "ILMC" / "gradients"  / experiment_name,
+    save_grads(path=work_dir / "results" / "GP" / "gradients"  / experiment_name,
             file_appendix=file_appendix, 
             model_dict={name: param.grad for name, param in model.named_parameters()}, 
             training_dataset_dict=None,
@@ -180,6 +200,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    # Log in to your W&B account
+    import os
 
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
@@ -207,18 +229,10 @@ if __name__ == "__main__":
     )
 
     argparser.add_argument(
-        "--num_pca_dims",
-        "-npd",
-        type=int,
-        default=3,
-        help="plots figures",
-    )
-
-    argparser.add_argument(
         "--work_dir",
         "-wd",
 	type=str,
-        default="",
+        default="/Users/res219/Submission",
         help="working directory",
     )
 

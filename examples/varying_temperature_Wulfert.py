@@ -5,7 +5,7 @@ import copy
 import numpy as np
 from scipy.io import loadmat
 import torch
-from src.mogplvm import WSGPLVM
+from wsgplvm import WSGPLVM
 import matplotlib.pyplot as plt
 from itertools import chain
 from sklearn.model_selection import train_test_split

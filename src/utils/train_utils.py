@@ -1,11 +1,11 @@
 import torch
 from typing import List
 
-from src.mogplvm import MOGPLVM
+from wsgplvm import WSGPLVM
 from src.data import Dataset, SpectralData
 
 def train_bass_on_spectral_data(
-        model: MOGPLVM, 
+        model: WSGPLVM, 
         data: List[Dataset], 
         optimizer, 
         epochs: int
@@ -31,7 +31,7 @@ def train_bass_on_spectral_data(
     return elbo_list
 
 def train_gpfa_deterministic_on_spectral_data(
-        model: MOGPLVM, 
+        model: WSGPLVM, 
         data: List[Dataset], 
         optimizer, 
         epochs: int
@@ -60,7 +60,7 @@ def train_gpfa_deterministic_on_spectral_data(
     return elbo_list
 
 def lbfgs_training_loop(
-    model: MOGPLVM, 
+    model: WSGPLVM, 
     data: List[SpectralData], 
     params,
     epochs: int

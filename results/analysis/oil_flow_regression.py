@@ -1,7 +1,6 @@
 # Code to analyse the results of the oil flow regression experiment
 #%%
 
-import numpy as np
 import pandas as pd
 from pathlib import Path
 import seaborn as sns
@@ -21,7 +20,7 @@ wsgplvm_results = pd.read_csv(work_dir / f"results/WSGPLVM/csvs/{experiment_name
 #%%
 
 for data_idx in range(10):
-    print(f'fold {data_idx}, {wsgplvm_results[wsgplvm_results['data_idx']==data_idx]['seed'].unique()} seeds')
+    print(f'fold {data_idx}, {wsgplvm_results[wsgplvm_results["data_idx"]==data_idx]["seed"].unique()} seeds')
 #%%
 # get best restarts for PLS, we want the smallest cross validation error
 idx_min = pls_results.groupby('data_idx').idxmin()['cross_val_error']
@@ -43,7 +42,7 @@ ilmc_best_restarts
 # %%
 
 for metric in ['msep', 'log_prob']:
-    print(f"GP aggregated results. {metric} mean: {ilmc_best_restarts[metric].mean()}, std: {ilmc_best_restarts[metric].std()}")
+    print(f"ILMC aggregated results. {metric} mean: {ilmc_best_restarts[metric].mean()}, std: {ilmc_best_restarts[metric].std()}")
 
 #%%
 wsgplvm_results
