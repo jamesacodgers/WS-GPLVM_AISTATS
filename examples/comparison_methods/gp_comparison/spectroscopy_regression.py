@@ -232,7 +232,7 @@ if __name__ == "__main__":
         "--work_dir",
         "-wd",
 	type=str,
-        default="/Users/res219/Submission",
+        default="",
         help="working directory",
     )
 
