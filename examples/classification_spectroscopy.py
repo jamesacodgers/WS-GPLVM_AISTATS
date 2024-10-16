@@ -1,10 +1,10 @@
 # Code required for the classification hyperspecral example in the paper
 
 # %%
+import torch
 from itertools import chain
 import pandas as pd
-import torch
-from wsgplvm import WSGPLVM
+from src.wsgplvm import WSGPLVM
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -50,12 +50,12 @@ def main(args):
     path = work_dir / "results" / "WSGPLVM" / "csvs" / f'{experiment_name}.csv'
     
     # Check if run already in results file
-    df = pd.read_csv(path)
-    if len(df[(df['seed'] == seed) &  (df['fold_number'] == fold_number)]) > 0:
-        print('run already in results file')
-        pass 
+    # df = pd.read_csv(path)
+    # if len(df[(df['seed'] == seed) &  (df['fold_number'] == fold_number)]) > 0:
+    #     print('run already in results file')
+    #     pass 
 
-    else:
+    if True: # Removed check if experiment has been previously above, comment out this line and uncomment above to undo.
 
         training_df = pd.read_csv(work_dir / f"examples/data/UCRArchive_2018/Rock/cross_val/Rock_TRAIN_diff_fold_{fold_number}.tsv", delimiter="\t", header  = None)
         test_df = pd.read_csv(work_dir / f"examples/data/UCRArchive_2018/Rock/cross_val/Rock_TEST_diff_fold_{fold_number}.tsv", delimiter="\t", header  = None)

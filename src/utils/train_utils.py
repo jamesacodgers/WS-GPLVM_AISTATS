@@ -1,7 +1,7 @@
 import torch
 from typing import List
 
-from wsgplvm import WSGPLVM
+from src.wsgplvm import WSGPLVM
 from src.data import Dataset, SpectralData
 
 def train_bass_on_spectral_data(

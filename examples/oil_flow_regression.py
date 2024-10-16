@@ -1,7 +1,7 @@
 # Code required to make predictions of mixture fractions in oil
 
 import torch
-from wsgplvm import WSGPLVM
+from src.wsgplvm import WSGPLVM
 import argparse
 from pathlib import Path
 from itertools import chain
@@ -48,11 +48,11 @@ def main(args):
     
     # Check if run already in results file
     df = pd.read_csv(path)
-    if len(df[(df['seed'] == seed) &  (df['data_idx'] == data_idx)]) > 0:
-        print('run already in results file')
-        pass 
-    else:
-
+    # if len(df[(df['seed'] == seed) &  (df['data_idx'] == data_idx)]) > 0:
+    #     print('run already in results file')
+    #     pass 
+    # else:
+    if True: # Commented out the check if the run has already been done
         # Load data and move to GPU
         training_spectra = torch.Tensor(np.loadtxt(fname=work_dir / f'examples/data/3phData_splits/DataTrn_{data_idx}.txt')).to(device)
         training_labels = torch.Tensor(np.loadtxt(fname=work_dir / f'examples/data/3phData_splits/DataTrnLbls_{data_idx}.txt')).type(torch.int).to(device)
