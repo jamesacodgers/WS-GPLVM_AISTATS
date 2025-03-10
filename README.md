@@ -28,6 +28,6 @@ Once you've set up your environment, you're ready to start using WS-GPLVM:
 You can find the output of our experiments in the `results` folder. The scripts in `results/analysis` can be used to generate the plots and tables found in the paper.
 
 
-# Data Splits 
+## Data Splits 
 
-Only one split has been left for each experiment to comply with AIStats 
+Only one split has been left for each experiment to reduce repository size
